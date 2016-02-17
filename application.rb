@@ -24,12 +24,12 @@ module ApplicationHelper
   alphabet = ('a'..'z').to_a
   alphabet.each_with_index do |letter, index|
     define_method(letter.to_sym) do
+      next_letter = alphabet[index + 1]
       unless letter == alphabet.last
-        next_letter = alphabet[index + 1]
         self.send((next_letter.to_sym)) if next_letter
-        sleep(0.1)
-        return next_letter
       end
+      sleep(0.8)
+      return next_letter
     end
   end
 
@@ -76,4 +76,3 @@ class Sinatra::Application
     'hello world'
   end
 end
-
