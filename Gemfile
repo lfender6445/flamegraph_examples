@@ -5,6 +5,8 @@ source source_rubygems do
   gem 'pry'
   gem 'rack-mini-profiler'
   gem 'stackprof'
-  gem 'flamegraph'
+  # gem 'flamegraph'
+  gem 'flamegraph', path: '../flamegraph'
   gem 'memory_profiler'
+  gem 'ruby-prof'
 end

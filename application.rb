@@ -1,5 +1,7 @@
 require 'sinatra'
+require 'profiler'
 require 'pry'
+require 'ruby-prof'
 
 module ApplicationHelper
   MAX_STACK = 100
@@ -25,16 +27,14 @@ module ApplicationHelper
   alphabet.each_with_index do |letter, index|
     define_method(letter.to_sym) do
       next_letter = alphabet[index + 1]
-      unless letter == alphabet.last
-        self.send((next_letter.to_sym)) if next_letter
-      end
+      send((next_letter.to_sym)) if next_letter unless letter == alphabet.last
       sleep(0.8)
       return next_letter
     end
   end
 
   def stack
-    a()
+    a
   end
 
 
@@ -43,13 +43,15 @@ module ApplicationHelper
     if method_sym.to_s =~ /^stack_(.*)$/
       suffix = (method_sym.to_s.split('_').last.to_i + 1)
       return false if suffix == MAX_STACK
-      self.send "stack_#{suffix}".to_sym
+      send "stack_#{suffix}".to_sym
     end
   end
 end
 
 class Sinatra::Application
   use Rack::MiniProfiler
+  use Rack::RubyProf, path: 'tmp'
+
   helpers ApplicationHelper
 
   get '/' do
@@ -61,7 +63,7 @@ class Sinatra::Application
     # bar ~8% of a sampling
     bar
 
-    # baz ~ 78% of a sampling
+    # th.sqrt(rand)  baz ~ 78% of a sampling
     baz
     'hello world'
   end
@@ -74,5 +76,23 @@ class Sinatra::Application
   get '/stack' do
     stack
     'hello world'
+  end
+
+  get '/fast-profile' do
+    Profiler__.start_profile
+    1.upto(100) { Math.sqrt(rand) }
+    Profiler__.stop_profile
+    Profiler__.print_profile(STDOUT)
+  end
+
+  get '/slow-profile' do
+    Profiler__.start_profile
+    1.upto(100_000) { (Math.sqrt(rand)).ceil }
+    Profiler__.stop_profile
+    Profiler__.print_profile(STDOUT)
+  end
+
+  get '/ruby-prof' do
+    # 1.upto(100) { (Math.sqrt(rand)).ceil }
   end
 end
